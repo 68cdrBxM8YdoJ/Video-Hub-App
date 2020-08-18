@@ -65,6 +65,29 @@ const extractSingleFrameArgs = (
 };
 
 /**
+ * Generate the ffmpeg args to create thumb from exists image
+ * @param pathToVideo
+ * @param screenshotHeight
+ * @param imagePath
+ * @param savePath
+ */
+const createThumbFromImageArgs = (
+  pathToVideo: string,
+  screenshotHeight: number,
+  imagePath: string,
+  savePath: string,
+): string[] => {
+
+  const ssWidth: number = screenshotHeight * (16 / 9);
+  return [
+    '-y',
+    '-i', imagePath,
+    '-vf', scaleAndPadString(ssWidth, screenshotHeight),
+    savePath,
+  ];
+};
+
+/**
  * Take N screenshots of a particular file
  * at particular file size
  * save as particular fileHash
@@ -200,10 +223,16 @@ const extractFirstFrameArgs = (
  * THUMB ==================================
  *   (2) check thumb exists
  *         T:                           (4)
+ *         F:                           (2b)
+ *   (2b) check image exists
+ *         T:                           (3b)
  *         F:                           (3)
  *   (3) extract the SINGLE screenshot
  *         T:                           (4)
  *         F:                           (^) restart - assume corrupt
+ *   (3b) create thumb from image
+ *         T:                           (4)
+ *         F:                           (3)
  * FILMSTRIP ==============================
  *   (4) check filmstrip exists
  *         T:                           (6)
@@ -250,6 +279,7 @@ export function extractAll(
   const snippetLength:    number = screenshotSettings.clipSnippetLength; // -- length of each snippet in the clip
 
     const pathToVideo: string = path.join(videoFolderPath, currentElement.partialPath, currentElement.fileName);
+    const pathToImage: string = path.join(videoFolderPath, currentElement.partialPath, path.parse(currentElement.fileName).name + '.jpg');
 
     const duration:     number = currentElement.duration;
     const fileHash:     string = currentElement.hash;
@@ -281,11 +311,30 @@ export function extractAll(
         if (thumbExists) {
           return true;
         } else {
+          return checkFileExists(pathToImage);                                             // (2b)
+        }
+      })
+      .then((imageExists: boolean) => {
+        // console.log('02b - image exists = ' + imageExists);
+
+        if (imageExists) {
+          const ffmpegArgs: string[] = createThumbFromImageArgs(
+            pathToVideo, screenshotHeight, pathToImage, thumbnailSavePath
+          );
+          return spawn_ffmpeg_and_run(ffmpegArgs, maxRunTime.thumb, 'thumbFromImage');      // (3b)
+        } else {
+          return false;
+        }
+      })
+      .then((imageSuccess: boolean) => {
+        if (imageSuccess) {
+          return true;
+        } else {
           const ffmpegArgs: string[] =  extractSingleFrameArgs(
             pathToVideo, screenshotHeight, duration, thumbnailSavePath
           );
 
-          return spawn_ffmpeg_and_run(ffmpegArgs, maxRunTime.thumb, 'thumb');               // (3)
+          return spawn_ffmpeg_and_run(ffmpegArgs, maxRunTime.thumb, 'thumb');      // (3)
         }
       })
       .then((thumbSuccess: boolean) => {
