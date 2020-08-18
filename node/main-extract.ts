@@ -531,7 +531,7 @@ function scaleAndPadString(width: number, height: number): string {
   // https://superuser.com/questions/547296/resizing-videos-with-ffmpeg-avconv-to-fit-into-static-sized-player
 
   return 'scale=w=' + width + ':h=' + height + ':force_original_aspect_ratio=decrease,' +
-         'pad='     + width + ':'   + height + ':(ow-iw)/2:(oh-ih)/2';
+         'pad='     + width + ':'   + height + ':(ow-iw)/2:(oh-ih)/2:color=cccccc';
 
 }
 
