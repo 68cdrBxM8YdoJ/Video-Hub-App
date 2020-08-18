@@ -26,11 +26,11 @@
     "icon": "dist/favicon",
     "asar": true,
     "asarUnpack": [
-      "../node_modules/@ffmpeg-installer",
-      "../node_modules/@ffprobe-installer"
+      "node_modules/@ffmpeg-installer",
+      "node_modules/@ffprobe-installer"
     ],
     "target": [
-      "nsis"
+      "portable"
     ]
   },
   "mac": {
@@ -39,8 +39,8 @@
     "icon": "src/assets/icons.icns",
     "asar": true,
     "asarUnpack": [
-      "../node_modules/@ffmpeg-installer",
-      "../node_modules/@ffprobe-installer"
+      "node_modules/@ffmpeg-installer",
+      "node_modules/@ffprobe-installer"
     ]
   },
   "linux": {
